@@ -10,9 +10,9 @@ warnings.filterwarnings("ignore")
 
 img_size = (64, 64)
 batch_size = 32
-epochs = 3
+epochs = 30
 
-# --- داده‌های اولیه (فولدر Images) ---
+# Data augmentation generator for training data
 train_datagen = ImageDataGenerator(
     rescale=1./255,
     rotation_range=10,
@@ -24,6 +24,7 @@ train_datagen = ImageDataGenerator(
     validation_split=0.2
 )
 
+# For training data (subset='training')
 train_generator = train_datagen.flow_from_directory(
     'Images',
     target_size=img_size,
@@ -34,6 +35,7 @@ train_generator = train_datagen.flow_from_directory(
     seed=123
 )
 
+# For validation data (subset='validation'), no augmentation but rescaling applied
 val_datagen = ImageDataGenerator(rescale=1./255, validation_split=0.2)
 
 val_generator = val_datagen.flow_from_directory(
@@ -46,7 +48,7 @@ val_generator = val_datagen.flow_from_directory(
     seed=123
 )
 
-# --- تعریف مدل اولیه ---
+# Model definition
 model = tf.keras.Sequential([
     tf.keras.Input(shape=(64, 64, 3)),
     tf.keras.layers.Conv2D(32, (3, 3), activation="relu"),
@@ -64,7 +66,7 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(64, activation="relu"),
     tf.keras.layers.Dropout(0.5),
 
-    tf.keras.layers.Dense(2, activation="softmax")  # تعداد کلاس‌ها
+    tf.keras.layers.Dense(2, activation="softmax")  
 ])
 
 model.compile(
@@ -73,11 +75,11 @@ model.compile(
     metrics=["accuracy"]
 )
 
-# --- کال‌بک‌ها ---
+# Callbacks for early stopping and learning rate reduction
 early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr=1e-6, verbose=1)
 
-# --- آموزش مدل اولیه ---
+# Training
 history = model.fit(
     train_generator,
     validation_data=val_generator,
@@ -85,19 +87,19 @@ history = model.fit(
     callbacks=[early_stop, reduce_lr],
     verbose=1
 )
-
+# Save model
 model.save("CNN_model.keras")
 
-# --- آماده‌سازی برای Fine-tuning با داده‌های جدید فولدر sara (یا DOGS) ---
 
-# بارگذاری مدل ذخیره شده
+
+# Load model
 base_model = tf.keras.models.load_model("CNN_model.keras")
 
-# Freeze کردن همه لایه‌ها به جز سه لایه آخر (آخرین conv، dense و dropout)
+# Freeze model except last 3 layers
 for layer in base_model.layers[:-3]:
     layer.trainable = False
 
-# اضافه کردن لایه‌های جدید به مدل Functional
+# Adding new model
 fine_tuned_model = tf.keras.Sequential([
     base_model,
     Dense(128, activation='relu'),
@@ -113,7 +115,7 @@ fine_tuned_model.compile(
     metrics=["accuracy"]
 )
 
-# --- دیتاست جدید برای Fine-tuning از فولدر sara (یا DOGS) ---
+
 new_train_datagen = ImageDataGenerator(
     rescale=1./255,
     rotation_range=10,
@@ -126,7 +128,7 @@ new_train_datagen = ImageDataGenerator(
 )
 
 new_train_generator = new_train_datagen.flow_from_directory(
-    'DOGS',  # اینجا اسم فولدر جدیدت رو بذار
+    'DOGS',  # ا
     target_size=img_size,
     batch_size=batch_size,
     class_mode='sparse',
@@ -147,7 +149,7 @@ new_val_generator = new_val_datagen.flow_from_directory(
     seed=123
 )
 
-# --- آموزش Fine-tuning ---
+#Fine-tuning 
 history_finetune = fine_tuned_model.fit(
     new_train_generator,
     validation_data=new_val_generator,
@@ -158,7 +160,7 @@ history_finetune = fine_tuned_model.fit(
 
 fine_tuned_model.save("CNN_model_finetuned.keras")
 
-# --- رسم نمودار آموزش ---
+# Plotting accuracy and loss
 plt.plot(history_finetune.history['accuracy'], label='Fine-tune Training Accuracy')
 plt.plot(history_finetune.history['val_accuracy'], label='Fine-tune Validation Accuracy')
 plt.plot(history_finetune.history['loss'], label='Fine-tune Training Loss')
@@ -169,5 +171,6 @@ plt.ylabel('Accuracy / Loss')
 plt.legend()
 plt.show()
 
+# Print final accuracy
 print(f"Final Fine-tune Training Accuracy: {history_finetune.history['accuracy'][-1]:.2f}")
 print(f"Final Fine-tune Validation Accuracy: {history_finetune.history['val_accuracy'][-1]:.2f}")
