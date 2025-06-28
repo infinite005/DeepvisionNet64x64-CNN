@@ -62,7 +62,7 @@ model = tf.keras.Sequential([
     Dense(64, activation="relu"),
     Dropout(0.5),
 
-    Dense(2, activation="softmax")  # برای 2 کلاس، softmax خوبه
+    Dense(2, activation="softmax")  
 ])
 
 model.compile(
