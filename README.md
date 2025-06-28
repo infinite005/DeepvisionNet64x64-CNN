@@ -5,6 +5,13 @@ Designed for binary classification with data augmentation, training, and fine-tu
 
 ---
 
+## Model Performance
+
+- Final Training Accuracy: 99%
+- Final Validation Accuracy: 97%
+- These accuracy values represent the model’s performance on the training and validation datasets, respectively.
+
+
 ## Features
 
 - Input images of size 64x64 with 3 color channels (RGB)  
@@ -61,7 +68,16 @@ Load the fine-tuned model for inference or further training:
 import tensorflow as tf
 
 model = tf.keras.models.load_model('CNN_model_finetuned.keras')
+
 ----
+
+## Dataset
+The training and validation images used for this project can be downloaded from the following public folder:
+
+[Download dataset here]
+(https://drive.google.com/drive/folders/1i_opj382YPOEHYah98hYY1eDla2XegbS?usp=sharing)
+(https://drive.google.com/drive/folders/1_vfb4duUJuvi63GQU9JNexNxREZR_RXL?usp=sharing)
+
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
 
